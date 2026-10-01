@@ -1,0 +1,205 @@
+# API Layer
+
+Meridian has two API implementations that share the same interface:
+
+| Implementation              | Used in           | Location          |
+| --------------------------- | ----------------- | ----------------- |
+| Vercel serverless functions | Production        | `api/v1/`         |
+| Fastify server              | Local development | `apps/api-local/` |
+
+## Endpoints
+
+### `GET /api/v1/vaults`
+
+Returns all available vaults with live APY and TVL.
+
+**Response**
+
+```json
+{
+  "vaults": [
+    {
+      "id": "blend-usdc-variable",
+      "protocol": "blend",
+      "asset": "USDC",
+      "name": "Blend Capital",
+      "label": "Variable Rate",
+      "apy": 7.42,
+      "tvl": 1240000,
+      "userBalance": 0,
+      "riskLevel": "safe"
+    }
+  ],
+  "recommendedVaultId": "blend-usdc-variable",
+  "updatedAt": "2026-05-26T12:00:00.000Z",
+  "cached": false
+}
+```
+
+APY data is sourced from DeFiLlama's `/pools` endpoint filtered to Stellar stablecoins. Pools are matched against a curated registry (`known-pools.ts`) that maps DeFiLlama pool UUIDs to protocol metadata. `recommendedVaultId` is the vault with the highest APY, or `null` if none qualifies.
+
+### `GET /api/v1/vaults/:vaultId`
+
+Returns a single vault or 404.
+
+### `GET /api/v1/positions/:publicKey`
+
+Returns the user's on-chain position.
+
+**Response**
+
+```json
+{
+  "positions": [
+    {
+      "vaultId": "blend-usdc-variable",
+      "shares": 100.0,
+      "deposited": 100.0,
+      "earned": 2.34,
+      "entryTime": 1716729600
+    }
+  ]
+}
+```
+
+Reads position data directly from the vault contract via `simulateTransaction`. Returns an empty array if the wallet holds no shares.
+
+### `POST /api/v1/tx/deposit`
+
+Builds an unsigned Soroban deposit transaction.
+
+**Request**
+
+```json
+{
+  "walletAddress": "G...",
+  "vaultId": "blend-usdc-variable",
+  "amount": "100.00"
+}
+```
+
+**Response**
+
+```json
+{
+  "xdr": "AAAAAgAAAAA...",
+  "fee": "12345"
+}
+```
+
+The `xdr` field is a base64-encoded unsigned `TransactionEnvelope`. The `fee` is the simulated resource fee in stroops. The client must forward the XDR to the wallet for signing before submitting.
+
+### `POST /api/v1/tx/withdraw`
+
+Builds an unsigned Soroban withdraw transaction.
+
+**Request**
+
+```json
+{
+  "walletAddress": "G...",
+  "vaultId": "blend-usdc-variable",
+  "shares": "95.5000000"
+}
+```
+
+**Response:** same shape as deposit: `{ xdr, fee }`.
+
+### `POST /api/v1/tx/add-trustline`
+
+Builds an unsigned transaction that adds a trustline for each classic Stellar asset the caller doesn't already hold: USDC always, and mUSDC too on any network where `MUSDC_ISSUER` is still set (only true before a [#578](https://github.com/drydocs/meridian/issues/578) cutover; mUSDC is now a custom SEP-41 token, not a classic asset, so it needs no trustline on a network deployed against the new contract). Must be submitted before a first deposit, on whichever assets it covers. Throws if every required trustline already exists.
+
+**Request**
+
+```json
+{ "walletAddress": "G..." }
+```
+
+**Response**
+
+```json
+{ "xdr": "AAAAAgAAAAA..." }
+```
+
+### `POST /api/v1/tx/submit`
+
+Submits a wallet-signed XDR to the Stellar network.
+
+**Request**
+
+```json
+{ "xdr": "AAAAAgAAAAA..." }
+```
+
+**Response**
+
+```json
+{ "hash": "abc123..." }
+```
+
+A `PENDING` or `DUPLICATE` status from the Stellar RPC is treated as success and the hash is returned. An `ERROR` status returns 500.
+
+### `GET /api/v1/keepers/health`
+
+Read-only status of both scheduled keepers, for the admin dashboard's Keeper Health card ([#615](https://github.com/drydocs/meridian/issues/615)). It is public, the same as `/api/v1/vaults`, and it reports on runs already recorded elsewhere, never triggers one, and holds no signing authority.
+
+**Response**
+
+```json
+{
+  "keepers": [
+    {
+      "id": "accrual",
+      "intervalMs": 900000,
+      "lastSuccessMs": 1716729600000,
+      "healthy": true
+    },
+    {
+      "id": "migration",
+      "intervalMs": 3600000,
+      "lastSuccessMs": null,
+      "healthy": false
+    }
+  ],
+  "checkedAt": "2026-05-26T12:00:00.000Z"
+}
+```
+
+`lastSuccessMs` is `null` until that keeper's endpoint (`/api/v1/keepers/accrue` or `/rebalance`) has completed a run with zero failures at least once. See `keeper-heartbeat.ts` for the definition. `healthy` is `false` whenever `lastSuccessMs` is `null` or more than 2x the keeper's own schedule interval old, matching `.github/workflows/keepers.yml`'s cron cadence.
+
+### `GET /api/v1/admin/vault-state`
+
+Read-only coordinator vault state for the admin dashboard's Vault State card ([#615](https://github.com/drydocs/meridian/issues/615)): active adapter/protocol, total shares, total assets, and the pause flag. It is public, for the same reason as `/api/v1/keepers/health`, and it exposes the same on-chain data `/api/v1/vaults` already surfaces, just reshaped for the admin view.
+
+**Response**
+
+```json
+{
+  "protocol": "blend",
+  "adapterId": "CADAPTER...",
+  "totalShares": 12345.67,
+  "totalAssets": 12890.12,
+  "paused": false
+}
+```
+
+Returns 404 if no Meridian coordinator vault is configured for the current network, or 503 if the on-chain read fails.
+
+## Serverless vs Fastify
+
+Both implementations share the same handler logic and import from the same workspace packages (`@meridian/shared`, `@meridian/stellar-sdk-helpers`).
+
+The Vercel functions (`api/v1/`) import workspace packages that are pre-built into self-contained JS bundles by `scripts/build-vercel.sh` before deployment. The build script runs esbuild on each package's entry point with `--bundle --packages=external`, inlining all relative imports while leaving npm packages external. Vercel then bundles the resulting `dist/index.js` files alongside the function handlers at deploy time.
+
+The Fastify server (`apps/api-local/`) runs the same packages directly via `tsx`, which handles TypeScript natively in the development process.
+
+## Vault ID to contract address mapping
+
+The vault contract's `deposit`/`withdraw` take no protocol-selection parameter. Which protocol a deposit reaches is fixed by whichever adapter the target vault instance has set, not by anything passed in the call. Building a deposit transaction therefore resolves `vaultId` directly to the specific deployed vault contract address to call, via the mapping in `packages/stellar-sdk-helpers/src/known-pools.ts`:
+
+| Vault ID prefix | Resolves to                                                |
+| --------------- | ---------------------------------------------------------- |
+| `blend-`        | A vault instance with `BlendAdapter` set as its adapter    |
+| `defindex-`     | A vault instance with `DefindexAdapter` set as its adapter |
+
+Any unrecognized `vaultId` returns a 500 with a clear mapping error.

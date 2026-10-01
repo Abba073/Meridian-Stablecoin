@@ -1,0 +1,370 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  buildDefindexDepositTx,
+  buildDefindexWithdrawTx,
+  stroopsToUnits,
+  fetchDefindexPosition,
+  getDefindexAssetAmountPerShares,
+} from "./defindex";
+import { clearRpcServerCache, getRpcServer } from "./internal";
+import { Address, Contract, nativeToScVal, xdr } from "@stellar/stellar-sdk";
+import type { StellarNetwork } from "./types";
+
+// Track rpc.Server constructor calls so we can assert on the timeout option.
+const capturedServerArgs: unknown[][] = [];
+vi.mock("@stellar/stellar-sdk", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@stellar/stellar-sdk")>();
+  return {
+    ...actual,
+    rpc: {
+      ...actual.rpc,
+      Server: class extends actual.rpc.Server {
+        constructor(...args: ConstructorParameters<typeof actual.rpc.Server>) {
+          capturedServerArgs.push(args);
+          super(...args);
+        }
+      },
+    },
+  };
+});
+
+vi.mock("./tx", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./tx")>();
+  return { ...actual, simulateView: vi.fn(), prepareSorobanTx: vi.fn() };
+});
+
+import { simulateView, prepareSorobanTx } from "./tx";
+
+const network: StellarNetwork = {
+  network: "testnet",
+  rpcUrl: "https://soroban-testnet.stellar.org",
+  passphrase: "Test SDF Network ; September 2015",
+};
+const CONTRACT_ID = "CBK5RI4BCA7TLSD2S5Q5TH2LUQAT55GF34OBTWPFUKWZ5O6YXSQDAWOJ";
+const config = { vaultId: CONTRACT_ID, network };
+const ADDR = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5";
+
+// The positive-amount guards run before any network access, so they are
+// unit-testable without an RPC server.
+describe("buildDefindexDepositTx", () => {
+  it("rejects a non-positive amount", async () => {
+    await expect(buildDefindexDepositTx(config, ADDR, 0n)).rejects.toThrow(
+      /positive/
+    );
+    await expect(buildDefindexDepositTx(config, ADDR, -1n)).rejects.toThrow(
+      /positive/
+    );
+  });
+});
+
+describe("buildDefindexWithdrawTx", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects non-positive shares", async () => {
+    await expect(buildDefindexWithdrawTx(config, ADDR, 0n)).rejects.toThrow(
+      /positive/
+    );
+  });
+
+  it("quotes expected payout and applies slippage to min_amounts_out", async () => {
+    const shares = 5_000_000n;
+    const expectedPayout = 10_000_000n;
+    const slippageBps = 10n;
+    const expectedMin =
+      expectedPayout - (expectedPayout * slippageBps) / 10_000n;
+
+    vi.mocked(simulateView).mockResolvedValue([expectedPayout]);
+
+    let capturedOp: xdr.Operation | undefined;
+    vi.mocked(prepareSorobanTx).mockImplementation(
+      async (_net, _caller, op) => {
+        capturedOp = op;
+        return { xdr: "AAAA", fee: "100" };
+      }
+    );
+
+    await buildDefindexWithdrawTx(config, ADDR, shares);
+
+    expect(capturedOp).toBeDefined();
+    const expectedOp = new Contract(config.vaultId).call(
+      "withdraw",
+      nativeToScVal(shares, { type: "i128" }),
+      xdr.ScVal.scvVec([nativeToScVal(expectedMin, { type: "i128" })]),
+      Address.fromString(ADDR).toScVal()
+    );
+    expect(capturedOp!.toXDR("base64")).toBe(expectedOp.toXDR("base64"));
+  });
+
+  it("uses default 10 bps slippage when none provided", async () => {
+    const shares = 5_000_000n;
+    const expectedPayout = 10_000_000n;
+    const defaultSlippageBps = 10n;
+    const expectedMin =
+      expectedPayout - (expectedPayout * defaultSlippageBps) / 10_000n;
+
+    vi.mocked(simulateView).mockResolvedValue([expectedPayout]);
+
+    let capturedOp: xdr.Operation | undefined;
+    vi.mocked(prepareSorobanTx).mockImplementation(
+      async (_net, _caller, op) => {
+        capturedOp = op;
+        return { xdr: "AAAA", fee: "100" };
+      }
+    );
+
+    await buildDefindexWithdrawTx(config, ADDR, shares);
+
+    expect(capturedOp).toBeDefined();
+    const expectedOp = new Contract(config.vaultId).call(
+      "withdraw",
+      nativeToScVal(shares, { type: "i128" }),
+      xdr.ScVal.scvVec([nativeToScVal(expectedMin, { type: "i128" })]),
+      Address.fromString(ADDR).toScVal()
+    );
+    expect(capturedOp!.toXDR("base64")).toBe(expectedOp.toXDR("base64"));
+  });
+
+  it("zero slippage sets min_amounts_out equal to expected payout", async () => {
+    const shares = 5_000_000n;
+    const expectedPayout = 10_000_000n;
+
+    vi.mocked(simulateView).mockResolvedValue([expectedPayout]);
+
+    let capturedOp: xdr.Operation | undefined;
+    vi.mocked(prepareSorobanTx).mockImplementation(
+      async (_net, _caller, op) => {
+        capturedOp = op;
+        return { xdr: "AAAA", fee: "100" };
+      }
+    );
+
+    await buildDefindexWithdrawTx(config, ADDR, shares, 0n);
+
+    expect(capturedOp).toBeDefined();
+    const expectedOp = new Contract(config.vaultId).call(
+      "withdraw",
+      nativeToScVal(shares, { type: "i128" }),
+      xdr.ScVal.scvVec([nativeToScVal(expectedPayout, { type: "i128" })]),
+      Address.fromString(ADDR).toScVal()
+    );
+    expect(capturedOp!.toXDR("base64")).toBe(expectedOp.toXDR("base64"));
+  });
+
+  it("handles null expected payout safeguard", async () => {
+    vi.mocked(simulateView).mockResolvedValue(null);
+
+    let capturedOp: xdr.Operation | undefined;
+    vi.mocked(prepareSorobanTx).mockImplementation(
+      async (_net, _caller, op) => {
+        capturedOp = op;
+        return { xdr: "AAAA", fee: "100" };
+      }
+    );
+
+    await buildDefindexWithdrawTx(config, ADDR, 5_000_000n);
+
+    expect(capturedOp).toBeDefined();
+    // When the simulation returns null, expectedAmount is 0n → minAmount = 0n
+    const expectedOp = new Contract(config.vaultId).call(
+      "withdraw",
+      nativeToScVal(5_000_000n, { type: "i128" }),
+      xdr.ScVal.scvVec([nativeToScVal(0n, { type: "i128" })]),
+      Address.fromString(ADDR).toScVal()
+    );
+    expect(capturedOp!.toXDR("base64")).toBe(expectedOp.toXDR("base64"));
+  });
+
+  it("calls simulateView with get_asset_amounts_per_shares and the given shares", async () => {
+    const shares = 7_000_000n;
+    vi.mocked(simulateView).mockResolvedValue([14_000_000n]);
+    vi.mocked(prepareSorobanTx).mockResolvedValue({ xdr: "AAAA", fee: "100" });
+
+    await buildDefindexWithdrawTx(config, ADDR, shares);
+
+    expect(simulateView).toHaveBeenCalledWith(
+      expect.anything(),
+      config.vaultId,
+      config.network.passphrase,
+      "get_asset_amounts_per_shares",
+      nativeToScVal(shares, { type: "i128" })
+    );
+  });
+});
+
+describe("stroopsToUnits", () => {
+  it("converts small values exactly", () => {
+    expect(stroopsToUnits(10_000_000n)).toBe(1);
+    expect(stroopsToUnits(5_000_000n)).toBe(0.5);
+  });
+
+  it("preserves precision for values above Number.MAX_SAFE_INTEGER stroops", () => {
+    // 1 billion units = 10_000_000_000_000_000 stroops (1e16), above MAX_SAFE_INTEGER
+    const stroops = 10_000_000_000_000_000n;
+    expect(stroopsToUnits(stroops)).toBe(1_000_000_000);
+  });
+
+  it("handles fractional units correctly", () => {
+    // 1.0000001 units = 10_000_001 stroops
+    expect(stroopsToUnits(10_000_001n)).toBeCloseTo(1.0000001, 7);
+  });
+});
+
+describe("fetchDefindexPosition", () => {
+  const VAULT_ID = "CVAULT000000000000000000000000000000000000000000000000000";
+  const PUBKEY = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearRpcServerCache();
+    capturedServerArgs.length = 0;
+  });
+
+  it("constructs rpc.Server with a 12 s HTTP timeout so the outer race fires first", async () => {
+    vi.mocked(simulateView).mockResolvedValue(0n);
+
+    await fetchDefindexPosition(network, VAULT_ID, "defindex-usdc", PUBKEY);
+
+    expect(capturedServerArgs).toHaveLength(1);
+    expect(capturedServerArgs[0][0]).toBe(network.rpcUrl);
+    expect(capturedServerArgs[0][1]).toMatchObject({ timeout: 12_000 });
+  });
+
+  it("returns [] when the user holds zero shares", async () => {
+    vi.mocked(simulateView).mockResolvedValue(0n);
+    const result = await fetchDefindexPosition(
+      network,
+      VAULT_ID,
+      "defindex-usdc",
+      PUBKEY
+    );
+    expect(result).toEqual([]);
+    expect(simulateView).toHaveBeenCalledOnce();
+  });
+
+  it("maps shares and underlying amount into a PositionInfo", async () => {
+    vi.mocked(simulateView)
+      .mockResolvedValueOnce(5_000_000n) // balance: 0.5 dfTokens
+      .mockResolvedValueOnce([10_000_000n]); // get_asset_amounts_per_shares: 1 USDC
+
+    const result = await fetchDefindexPosition(
+      network,
+      VAULT_ID,
+      "defindex-usdc",
+      PUBKEY
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].vaultId).toBe("defindex-usdc");
+    expect(result[0].shares).toBeCloseTo(0.5, 7);
+    expect(result[0].deposited).toBeCloseTo(1, 7);
+    expect(result[0].earned).toBe(0);
+    expect(result[0].entryTime).toBe(0);
+  });
+
+  it("sets deposited to 0 when amounts array is null", async () => {
+    vi.mocked(simulateView)
+      .mockResolvedValueOnce(5_000_000n)
+      .mockResolvedValueOnce(null);
+
+    const [pos] = await fetchDefindexPosition(
+      network,
+      VAULT_ID,
+      "defindex-usdc",
+      PUBKEY
+    );
+    expect(pos.deposited).toBe(0);
+  });
+
+  it("sets deposited to 0 when amounts array is empty", async () => {
+    vi.mocked(simulateView)
+      .mockResolvedValueOnce(5_000_000n)
+      .mockResolvedValueOnce([]);
+
+    const [pos] = await fetchDefindexPosition(
+      network,
+      VAULT_ID,
+      "defindex-usdc",
+      PUBKEY
+    );
+    expect(pos.deposited).toBe(0);
+  });
+});
+
+// Shared by buildDefindexWithdrawTx, fetchDefindexPosition (covered above via
+// their own null/empty-array edge cases), and rate-sources.ts's DeFindex
+// share-price probe — this exercises it directly as the single place that
+// response-parsing logic now lives.
+describe("getDefindexAssetAmountPerShares", () => {
+  const VAULT_ID = "CVAULT000000000000000000000000000000000000000000000000000";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearRpcServerCache();
+  });
+
+  it("calls get_asset_amounts_per_shares with the given shares and returns the first amount", async () => {
+    vi.mocked(simulateView).mockResolvedValueOnce([12_345_678n]);
+    const server = getRpcServer(network.rpcUrl, 5_000);
+
+    const amount = await getDefindexAssetAmountPerShares(
+      server,
+      VAULT_ID,
+      network.passphrase,
+      10_000_000n
+    );
+
+    expect(amount).toBe(12_345_678n);
+    expect(simulateView).toHaveBeenCalledWith(
+      server,
+      VAULT_ID,
+      network.passphrase,
+      "get_asset_amounts_per_shares",
+      expect.anything()
+    );
+  });
+
+  it("returns null when the response is null", async () => {
+    vi.mocked(simulateView).mockResolvedValueOnce(null);
+    const server = getRpcServer(network.rpcUrl, 5_000);
+
+    expect(
+      await getDefindexAssetAmountPerShares(
+        server,
+        VAULT_ID,
+        network.passphrase,
+        10_000_000n
+      )
+    ).toBeNull();
+  });
+
+  it("returns null when the response array is empty", async () => {
+    vi.mocked(simulateView).mockResolvedValueOnce([]);
+    const server = getRpcServer(network.rpcUrl, 5_000);
+
+    expect(
+      await getDefindexAssetAmountPerShares(
+        server,
+        VAULT_ID,
+        network.passphrase,
+        10_000_000n
+      )
+    ).toBeNull();
+  });
+});
+
+describe("slippage tolerance", () => {
+  it("default 0.1% tolerance produces minAmount strictly less than amount", () => {
+    const amount = 1_000_000_000n;
+    const slippageBps = 10n;
+    const minAmount = amount - (amount * slippageBps) / 10_000n;
+    expect(minAmount).toBe(999_000_000n);
+    expect(minAmount).toBeLessThan(amount);
+  });
+
+  it("zero slippage keeps minAmount equal to amount", () => {
+    const amount = 1_000_000_000n;
+    const minAmount = amount - (amount * 0n) / 10_000n;
+    expect(minAmount).toBe(amount);
+  });
+});

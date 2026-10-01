@@ -1,0 +1,133 @@
+{
+  "header": {
+    "title": "Meridian"
+  },
+
+  "walletConnect": {
+    "disconnect": "Déconnecter",
+    "copyAddress": "Copier l'adresse",
+    "copied": "Copié",
+    "copyFailed": "Échec de la copie de l'adresse",
+    "walletDisconnected": "Portefeuille déconnecté",
+    "walletConnected": "Portefeuille connecté",
+    "chooseWallet": "Choisir un portefeuille",
+    "installed": "Installé",
+    "install": "Installer"
+  },
+
+  "vaultPanel": {
+    "deposit": "Déposer",
+    "withdraw": "Retirer",
+    "network": "Réseau",
+    "apy": "Rendement annuel",
+    "tvl": "TVL",
+    "route": "Route",
+    "noLiveRateData": "Aucune donnée de rendement disponible.",
+    "yourPosition": "Votre position",
+    "earned": "Gains",
+    "connectUSDC": "Connectez votre portefeuille pour déposer des USDC et commencer à générer du rendement automatiquement.",
+    "amount": "Montant",
+    "balance": "Solde",
+    "max": "Max",
+    "position": "Aucune position dans ce coffre.",
+    "waiting": "En attente de signature...",
+    "positionsError": "Impossible de charger votre position. Les dépôts et retraits fonctionnent toujours."
+  },
+
+  "riskDisclosure": {
+    "title": "Avant de continuer",
+    "description": "Meridian est un produit non-custodial basé sur des contrats intelligents, pas une banque. Son utilisation, y compris la connexion d'un portefeuille ou la réalisation d'un dépôt, implique d'accepter les risques ci-dessous.",
+    "smartContractRisk": "Risque lié aux contrats intelligents : des bugs ou des attaques dans les contrats de Meridian peuvent affecter les fonds détenus via le produit.",
+    "adapterRisk": "Risque lié aux adapteurs et protocoles : les fonds passent par des protocoles de prêt et adapteurs externes, dont la performance ou les défaillances peuvent affecter votre solde et vos rendements.",
+    "acknowledgement": "Je comprends qu'il s'agit d'un produit exposé à des risques de contrats intelligents et j'accepte ces risques.",
+    "continue": "Accepter et continuer",
+    "cancel": "Annuler"
+  },
+
+  "vaultActions": {
+    "failedAssets": "Échec de l'ajout des actifs du coffre",
+    "depositFailed": "Échec du dépôt",
+    "assetsAdded": "Actifs du coffre ajoutés au portefeuille",
+    "withdrawalFailed": "Échec du retrait",
+    "withdrew": "Retiré",
+    "deposited": "Déposé",
+    "syncDelayed": "Mise à jour de votre solde en cours...",
+    "fundingWallet": "Financement du portefeuille testnet avec des USDC de test Blend...",
+    "walletFunded": "Portefeuille testnet financé",
+    "faucetFailed": "Échec du financement du portefeuille testnet"
+  },
+
+  "common": {
+    "connectWallet": "Connecter le portefeuille",
+    "connecting": "Connexion...",
+    "installWallet": "Installer {{name}}",
+    "retry": "Réessayer"
+  },
+
+  "admin": {
+    "title": "Tableau de bord admin",
+    "connectPrompt": "Connectez un portefeuille administrateur autorisé pour voir le tableau de bord.",
+    "notAuthorized": "Ce portefeuille n'est pas autorisé à voir le tableau de bord admin.",
+    "keeperHealth": {
+      "title": "État des keepers",
+      "accrual": "Keeper d'accumulation",
+      "migration": "Keeper de migration",
+      "healthy": "Sain",
+      "stalled": "Bloqué",
+      "lastRun": "Dernière exécution",
+      "never": "Jamais",
+      "interval": "Toutes les {{interval}}",
+      "overdueBy": "En retard de {{duration}}",
+      "loadError": "Impossible de charger l'état des keepers."
+    },
+    "vaultState": {
+      "title": "État du coffre",
+      "adapter": "Adaptateur",
+      "totalShares": "Parts totales",
+      "totalAssets": "Actifs totaux",
+      "status": "Statut",
+      "active": "Actif",
+      "paused": "En pause",
+      "loadError": "Impossible de charger l'état du coffre."
+    }
+  },
+
+  "adminHistory": {
+    "title": "Historique des actions admin",
+    "subtitle": "Journal chronologique des appels d'administration du coffre",
+    "error": "Échec du chargement de l'historique admin",
+    "empty": "Aucune action admin enregistrée pour l'instant",
+    "viewTx": "Voir tx"
+  },
+
+  "errorBoundary": {
+    "title": "Une erreur s'est produite. Veuillez recharger la page.",
+    "reload": "Recharger"
+  },
+
+  "status": {
+    "title": "État du contrat",
+    "subtitle": "Vérifiez ce qui est réellement déployé et en contrôle de ce coffre, sans lire le code source ni interroger le RPC directement.",
+    "network": "Réseau",
+    "addresses": {
+      "title": "Adresses des contrats",
+      "vault": "Coffre",
+      "adapter": "Adaptateur",
+      "musdc": "mUSDC",
+      "usdc": "USDC",
+      "eurc": "EURC",
+      "notDeployed": "Pas encore déployé",
+      "viewOnExplorer": "Voir sur l'explorateur"
+    },
+    "parameters": {
+      "title": "Paramètres du protocole",
+      "migrationCooldown": "Délai de migration",
+      "migrationCooldownValue": "{{ledgers}} ledgers (~1 minute)",
+      "note": "Constantes fixes du contrat, non configurables par l'admin. Vérifiez directement le code source du contrat plutôt que de vous fier uniquement à cette page."
+    },
+    "audit": {
+      "title": "Audit de sécurité",
+      "notYetAvailable": "Aucun audit de sécurité indépendant n'a encore été réalisé. Un rapport sera lié ici dès qu'il existera."
+    }
+  }
+}

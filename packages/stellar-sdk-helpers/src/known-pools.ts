@@ -1,0 +1,85 @@
+export interface KnownPoolMeta {
+  id: string;
+  name: string;
+  protocol: "blend" | "defindex" | "meridian";
+  label: string;
+  // The main protocol contract for this vault: lending pool address for Blend,
+  // vault contract address for DeFindex, coordinator vault address for Meridian.
+  // Optional on mainnet until deployed.
+  contractId?: string;
+  // Stellar Asset Contract address of the vault's underlying reserve asset
+  // (USDC/EURC). Read by the migration keeper's discovery to thread the right
+  // asset through each RateQuery, so a Blend pool is priced on the vault's own
+  // reserve rather than a hardcoded USDC address (#539). Optional on mainnet
+  // until a vault is deployed there.
+  assetId?: string;
+}
+
+export interface TestnetPoolMeta extends KnownPoolMeta {
+  contractId: string;
+  assetId: string;
+  asset: string;
+}
+
+// Mainnet keys are DeFiLlama pool UUIDs (yields.llama.fi/pools) matched against
+// live APY/TVL data. Testnet keys are internal identifiers; DeFiLlama does not
+// index testnet pools, so testnet vaults are populated from on-chain data directly.
+export const KNOWN_POOLS: {
+  mainnet: Record<string, KnownPoolMeta>;
+  testnet: Record<string, TestnetPoolMeta>;
+} = {
+  mainnet: {
+    "ecf788e3-d2ef-4fdd-9ece-8a2d96226ddf": {
+      id: "blend-usdc-fixed",
+      name: "Blend Capital",
+      protocol: "blend",
+      label: "Fixed Pool",
+      contractId: "CAJJZSGMMM3PD7N33TAPHGBUGTB43OC73HVIK2L2G6BNGGGYOSSYBXBD",
+      assetId: "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+    },
+    "3a61420f-6f6e-45f9-accc-8d23f5a32d33": {
+      id: "blend-eurc-fixed",
+      name: "Blend Capital",
+      protocol: "blend",
+      label: "Fixed Pool",
+    },
+    "48c597dc-9367-4b4a-aa10-49b9755c4c2e": {
+      id: "blend-usdc-variable",
+      name: "Blend Capital",
+      protocol: "blend",
+      label: "Variable Pool",
+    },
+    "9a2f1f81-0a6e-441d-8219-c13b3520bd57": {
+      id: "blend-eurc-variable",
+      name: "Blend Capital",
+      protocol: "blend",
+      label: "Variable Pool",
+    },
+    // Meridian coordinator vault: protocol-agnostic entry point. The vault
+    // routes to its active adapter (currently Blend) transparently. Not a
+    // DeFiLlama pool, so keyed the same way as the testnet entry rather than
+    // by UUID.
+    "meridian-usdc": {
+      id: "meridian-usdc",
+      name: "Meridian",
+      protocol: "meridian",
+      label: "USDC Vault",
+      contractId: "CBRAD5MD7CCXNXRLRGTRKG4NNZKR3N643VUEBNJGWB2L6KLZDLFWMXHQ",
+      assetId: "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+    },
+  },
+  testnet: {
+    // Meridian coordinator vault: protocol-agnostic entry point. The vault
+    // routes to its active adapter (Blend or DeFindex) transparently.
+    // contractId is updated after each redeployment.
+    "meridian-usdc": {
+      id: "meridian-usdc",
+      name: "Meridian",
+      protocol: "meridian",
+      label: "USDC Vault",
+      contractId: "CAIQBVLBIUWQGE6DQUHDMZ2QWI7QP6KTCN7GP2BIZ6JZC4ES47JO4SSM",
+      assetId: "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
+      asset: "USDC",
+    },
+  },
+};

@@ -1,0 +1,1711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meridian: Stablecoin Yield on Stellar</title>
+    <meta
+      name="description"
+      content="Earn the best USDC yields on Stellar without a bank account or gas fees. Powered by Blend Capital and DeFindex."
+    />
+    <meta property="og:title" content="Meridian: Stablecoin Yield on Stellar" />
+    <meta
+      property="og:description"
+      content="Earn the best USDC yields on Stellar."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="./og_image.png" />
+    <meta property="og:url" content="https://usemeridian.vercel.app" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Meridian: Stablecoin Yield on Stellar"
+    />
+    <meta
+      name="twitter:description"
+      content="Earn the best USDC yields on Stellar."
+    />
+    <meta name="twitter:image" content="./og_image.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:ital,wght@1,500;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="./logo-mark.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="./favicon-32x32.png"
+      sizes="32x32"
+    />
+    <link rel="apple-touch-icon" href="./favicon-180x180.png" sizes="180x180" />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #070d19;
+        --bg-2: #0d1e35;
+        --surface: rgba(255, 255, 255, 0.03);
+        --surface-2: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-strong: rgba(255, 255, 255, 0.16);
+        --text: #f0f4ff;
+        --muted: rgba(240, 244, 255, 0.52);
+        --dim: rgba(240, 244, 255, 0.26);
+        --blue: #3b82f6;
+        --green: #10b981;
+        --green-glow: rgba(16, 185, 129, 0.12);
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        line-height: 1.6;
+      }
+
+      /* ── Background ── */
+      .bg-canvas {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-image: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.13) 1px,
+          transparent 1px
+        );
+        background-size: 28px 28px;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+        opacity: 0.028;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* ── Layout ── */
+      .wrap {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 0 30px;
+        position: relative;
+        z-index: 2;
+      }
+
+      section {
+        padding: 128px 0;
+      }
+
+      .nav-gh {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        flex: 1;
+        padding: 15px 28px;
+        border-radius: 9px;
+        border: 1px solid rgba(16, 185, 129, 0.45);
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--muted);
+        text-decoration: none;
+        transition:
+          color 0.2s,
+          border-color 0.2s;
+      }
+
+      .nav-gh:hover {
+        color: var(--text);
+        border-color: var(--green);
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 85%;
+      }
+
+      .nav-launch {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        flex: 1;
+        padding: 14px 28px;
+        border-radius: 8px;
+        border: 1px solid #059669;
+        background: #059669;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+        text-decoration: none;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .nav-launch:hover {
+        background: #047857;
+        border-color: #047857;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+      }
+
+      /* ── Hero ── */
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        padding: 160px 0;
+        overflow: hidden;
+      }
+
+      .hero > .wrap {
+        width: 100%;
+      }
+
+      .hero-content {
+        position: relative;
+        min-height: 460px;
+      }
+
+      .hero-copy {
+        max-width: 640px;
+        position: relative;
+        z-index: 2;
+      }
+
+      h1 {
+        font-size: clamp(56px, 6.9vw, 90px);
+        font-weight: 900;
+        line-height: 1.03;
+        letter-spacing: -0.035em;
+        margin-top: -20px;
+        margin-bottom: 24px;
+      }
+
+      .grad {
+        color: var(--green);
+        font-family: "Fraunces", serif;
+        font-style: italic;
+      }
+
+      .hero-sub {
+        font-size: 18px;
+        color: var(--muted);
+        max-width: 500px;
+        margin-bottom: 40px;
+        line-height: 1.7;
+        text-wrap: pretty;
+      }
+
+      /* ── Product Mockup ── */
+      .mock-wrap {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 56%;
+        z-index: 1;
+      }
+
+      .mock-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(to bottom, var(--bg) 0%, transparent 18%),
+          linear-gradient(
+            to right,
+            var(--bg) 0%,
+            rgba(7, 13, 25, 0.5) 30%,
+            transparent 60%
+          );
+        pointer-events: none;
+        z-index: 3;
+        border-radius: 14px 0 0 14px;
+      }
+
+      .mock-window {
+        position: relative;
+        z-index: 1;
+        border-radius: 14px;
+        border: 1px solid var(--border-strong);
+        background: rgba(9, 16, 30, 0.95);
+        overflow: hidden;
+        box-shadow:
+          0 40px 100px rgba(0, 0, 0, 0.6),
+          0 0 0 1px rgba(255, 255, 255, 0.04);
+      }
+
+      .mock-chrome {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .mock-dots {
+        display: flex;
+        gap: 6px;
+      }
+
+      .mock-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      .mock-dot-r {
+        background: #ff5f57;
+      }
+      .mock-dot-y {
+        background: #febc2e;
+      }
+      .mock-dot-g {
+        background: #28c840;
+      }
+
+      .mock-url {
+        flex: 1;
+        text-align: center;
+        font-size: 11px;
+        color: var(--dim);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 4px 10px;
+        font-family: "SF Mono", "Fira Code", monospace;
+      }
+
+      .mock-body {
+        padding: 24px;
+      }
+
+      .mock-section-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: var(--dim);
+        margin-bottom: 13px;
+      }
+
+      .mock-portfolio {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+
+      .mock-stat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 13px 15px;
+      }
+
+      .mock-stat-label {
+        font-size: 9px;
+        color: var(--dim);
+        margin-bottom: 4px;
+      }
+      .mock-stat-val {
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .mock-stat-val.pos {
+        color: var(--green);
+      }
+
+      .mock-vaults {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      .mock-vault {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .mock-vault-name {
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .mock-vault-proto {
+        font-size: 10px;
+        color: var(--dim);
+        margin-top: 2px;
+      }
+      .mock-vault-apy {
+        font-size: 16px;
+        font-weight: 900;
+        color: var(--green);
+        letter-spacing: -0.02em;
+      }
+
+      /* ── Section labels ── */
+      .section-title {
+        font-size: clamp(37px, 4.8vw, 56px);
+        font-weight: 800;
+        letter-spacing: -0.027em;
+        line-height: 1.08;
+        margin-bottom: 18px;
+      }
+
+      .section-sub {
+        font-size: 18px;
+        color: var(--muted);
+        line-height: 1.65;
+        max-width: 460px;
+      }
+
+      /* ── Problem ── */
+      .alt-section {
+        background: var(--bg-2);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        --text: #ddeeff;
+        --muted: rgba(200, 225, 255, 0.56);
+        --dim: rgba(200, 225, 255, 0.28);
+        color: var(--text);
+      }
+
+      .light-section {
+        --section-bg: #e9edf3;
+        background-color: var(--section-bg);
+        background-image: radial-gradient(
+          circle,
+          rgba(59, 130, 246, 0.3) 1px,
+          transparent 1px
+        );
+        background-size: 28px 28px;
+        border-top: 1px solid rgba(0, 0, 0, 0.07);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+        --text: #0d1929;
+        --muted: rgba(13, 25, 41, 0.58);
+        --dim: rgba(13, 25, 41, 0.36);
+        --border: rgba(0, 0, 0, 0.1);
+        --surface: rgba(0, 0, 0, 0.04);
+        color: var(--text);
+      }
+
+      .problem-header {
+        margin-bottom: 60px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+
+      .stat {
+        padding: 36px 30px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        position: relative;
+        overflow: hidden;
+        transform: scale(1);
+        transition:
+          transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+          background-color 0.4s ease,
+          border-color 0.4s ease,
+          box-shadow 0.4s ease;
+      }
+
+      .stat:hover {
+        transform: scale(1.045);
+        z-index: 2;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+      }
+
+      .stat::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          140deg,
+          rgba(255, 255, 255, 0.024) 0%,
+          transparent 55%
+        );
+        pointer-events: none;
+      }
+
+      .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        transition:
+          background-color 0.4s ease,
+          color 0.4s ease;
+      }
+
+      .stat-icon-red {
+        background: rgba(248, 113, 113, 0.12);
+        color: #f87171;
+      }
+      .stat-icon-amber {
+        background: rgba(251, 191, 36, 0.12);
+        color: #fbbf24;
+      }
+      .stat-icon-blue {
+        background: rgba(59, 130, 246, 0.12);
+        color: var(--blue);
+      }
+
+      .stat-num {
+        font-size: 52px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin-bottom: 10px;
+        transition: color 0.4s ease;
+      }
+
+      .num-red {
+        color: #f87171;
+      }
+      .num-amber {
+        color: #fbbf24;
+      }
+      .num-blue {
+        color: var(--blue);
+      }
+
+      .stat-name,
+      .stat-body {
+        transition: color 0.4s ease;
+      }
+
+      /* ── Problem card hover: zoom + flip to a solid color ── */
+      .stat-red:hover {
+        background: #d6544f;
+        border-color: #d6544f;
+      }
+      .stat-red:hover .stat-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+      .stat-red:hover .stat-num,
+      .stat-red:hover .stat-name,
+      .stat-red:hover .stat-body {
+        color: #fff;
+      }
+      .stat-red:hover .stat-body {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .stat-amber:hover {
+        background: #c98a2c;
+        border-color: #c98a2c;
+      }
+      .stat-amber:hover .stat-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+      .stat-amber:hover .stat-num,
+      .stat-amber:hover .stat-name,
+      .stat-amber:hover .stat-body {
+        color: #fff;
+      }
+      .stat-amber:hover .stat-body {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      .stat-blue:hover {
+        background: #4879d9;
+        border-color: #4879d9;
+      }
+      .stat-blue:hover .stat-icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+      .stat-blue:hover .stat-num,
+      .stat-blue:hover .stat-name,
+      .stat-blue:hover .stat-body {
+        color: #fff;
+      }
+      .stat-blue:hover .stat-body {
+        color: rgba(255, 255, 255, 0.82);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .stat {
+          transition:
+            background-color 0.4s ease,
+            border-color 0.4s ease;
+        }
+        .stat:hover {
+          transform: none;
+        }
+      }
+
+      .flip-num {
+        display: inline-block;
+        perspective: 300px;
+      }
+
+      .flip-num.flipping {
+        animation: flipSwipe 0.65s cubic-bezier(0.45, 0, 0.2, 1);
+        transform-style: preserve-3d;
+      }
+
+      @keyframes flipSwipe {
+        0% {
+          transform: rotateX(0deg);
+        }
+        45% {
+          transform: rotateX(-90deg);
+        }
+        55% {
+          transform: rotateX(-90deg);
+        }
+        100% {
+          transform: rotateX(0deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .flip-num.flipping {
+          animation: none;
+        }
+      }
+
+      .stat-name {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      .stat-body {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      /* ── Steps ── */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 48px;
+        margin-top: 72px;
+        position: relative;
+        z-index: 0;
+      }
+
+      .step {
+        position: relative;
+      }
+
+      .step-line {
+        position: absolute;
+        top: 23px;
+        left: 46px;
+        right: -48px;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .flow-marker {
+        position: absolute;
+        top: 21px;
+        left: 0;
+        width: 24px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--green);
+        box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+        opacity: 0;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .step-num {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--section-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--green);
+        margin-bottom: 24px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .step h3 {
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        margin-bottom: 10px;
+      }
+
+      .step p {
+        font-size: 14.5px;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      /* ── Protocols ── */
+      /* .protocols shares .alt-section */
+
+      .proto-head {
+        margin-bottom: 52px;
+      }
+
+      .proto-head .section-sub {
+        max-width: 560px;
+        margin-top: 16px;
+      }
+
+      .proto-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+      }
+
+      .proto-card {
+        --ca: 255, 255, 255;
+        display: block;
+        padding: 36px;
+        border-radius: 20px;
+        border: 1px solid rgba(var(--ca), 0.28);
+        background: rgba(var(--ca), 0.14);
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        overflow: hidden;
+        transition:
+          border-color 0.22s,
+          background 0.22s;
+      }
+
+      .proto-card--blend {
+        --ca: 36, 163, 56;
+      }
+      .proto-card--defi {
+        --ca: 186, 155, 221;
+      }
+
+      .proto-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          140deg,
+          rgba(var(--ca), 0.14) 0%,
+          transparent 55%
+        );
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .proto-card:hover {
+        border-color: rgba(var(--ca), 0.5);
+        background: rgba(var(--ca), 0.2);
+      }
+
+      .proto-arrow {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        font-size: 18px;
+        color: var(--dim);
+        transition: color 0.2s;
+        z-index: 2;
+      }
+
+      .proto-card:hover .proto-arrow {
+        color: var(--muted);
+      }
+
+      .proto-logo-bg {
+        position: absolute;
+        right: -20px;
+        bottom: -20px;
+        opacity: 0.2;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .proto-name,
+      .proto-desc {
+        position: relative;
+        z-index: 2;
+      }
+
+      .proto-name {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.022em;
+        margin-bottom: 10px;
+      }
+      .proto-desc {
+        font-size: 14.5px;
+        color: var(--muted);
+        line-height: 1.65;
+        margin-bottom: 28px;
+      }
+
+      /* ── Built in public / Footer ── */
+      footer {
+        display: block;
+        padding: 72px 0 0;
+      }
+
+      footer > .wrap:last-child {
+        margin-top: 56px;
+        padding-bottom: 36px;
+      }
+
+      .pub-title {
+        font-size: 17.5px;
+      }
+
+      .pub-sub {
+        font-size: 14.5px;
+      }
+
+      .pub-chevron {
+        font-size: 19px;
+      }
+
+      .foot-left,
+      .foot-right a {
+        font-size: 15.5px;
+      }
+
+      .foot-wordmark {
+        font-size: 16.5px;
+      }
+
+      .foot-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .foot-left {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 13.5px;
+        color: var(--dim);
+      }
+
+      .foot-left a {
+        color: var(--dim);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .foot-left a:hover {
+        color: var(--muted);
+      }
+
+      .foot-wordmark {
+        font-weight: 700;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .foot-right {
+        display: flex;
+        gap: 22px;
+      }
+
+      .foot-right a {
+        font-size: 13.5px;
+        color: var(--dim);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      .foot-right a:hover {
+        color: var(--muted);
+      }
+
+      .public-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 96px;
+        align-items: center;
+      }
+
+      .public-copy .section-sub {
+        margin-bottom: 0;
+      }
+
+      .public-links {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        margin-top: 30px;
+        padding-left: 64px;
+      }
+
+      .pub-link {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 22px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        text-decoration: none;
+        color: inherit;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+      }
+
+      .pub-link:hover {
+        border-color: var(--border-strong);
+        background: var(--surface-2);
+      }
+
+      .pub-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 11px;
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--muted);
+      }
+
+      .pub-text {
+        flex: 1;
+      }
+      .pub-title {
+        font-size: 14.5px;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      .pub-sub {
+        font-size: 12.5px;
+        color: var(--dim);
+      }
+      .pub-chevron {
+        color: var(--dim);
+        font-size: 16px;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 900px) {
+        .hero-copy {
+          max-width: 100%;
+          text-align: center;
+        }
+
+        .hero-sub {
+          max-width: 100%;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .mock-wrap {
+          width: 100%;
+          right: 0;
+          top: 50%;
+          transform: translateX(-50%) translateY(-50%);
+          left: 50%;
+          opacity: 0.28;
+          display: flex;
+          justify-content: center;
+          filter: blur(3px);
+        }
+        .mock-wrap::after {
+          background:
+            linear-gradient(
+              to bottom,
+              var(--bg) 0%,
+              transparent 20%,
+              var(--bg) 85%
+            ),
+            linear-gradient(
+              to right,
+              var(--bg) 0%,
+              transparent 25%,
+              var(--bg) 75%
+            );
+        }
+      }
+
+      @media (max-width: 768px) {
+        section {
+          padding: 88px 0;
+        }
+        .hero {
+          padding: 110px 0;
+        }
+        h1 {
+          font-size: clamp(44px, 13vw, 68px);
+        }
+        .nav-actions {
+          flex-direction: column;
+          width: 100%;
+        }
+        .nav-gh,
+        .nav-launch {
+          width: 100%;
+        }
+        .stats {
+          grid-template-columns: 1fr;
+        }
+        .steps {
+          grid-template-columns: 1fr;
+          gap: 36px;
+        }
+        .step-line,
+        .flow-marker {
+          display: none;
+        }
+
+        .proto-grid {
+          grid-template-columns: 1fr;
+        }
+        .public-grid {
+          grid-template-columns: 1fr;
+          gap: 52px;
+        }
+        .public-links {
+          padding-left: 0;
+        }
+        .foot-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-canvas" aria-hidden="true"></div>
+
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-content">
+          <!-- Copy -->
+          <div class="hero-copy">
+            <h1>
+              Earn the best<br />
+              dollar yields<br />
+              <span class="grad">on Stellar</span>
+            </h1>
+            <p class="hero-sub">
+              Meridian scans every vault on Stellar and routes your USDC to
+              whichever pays the most, so it's never sitting idle while a better
+              rate is available elsewhere.
+            </p>
+
+            <div class="nav-actions">
+              <a class="nav-launch" href="/app/">Start Earning</a>
+              <a
+                class="nav-gh"
+                href="https://github.com/drydocs/meridian"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                GitHub
+              </a>
+            </div>
+          </div>
+
+          <!-- Product mockup -->
+          <div class="mock-wrap" aria-hidden="true">
+            <div class="mock-window">
+              <div class="mock-chrome">
+                <div class="mock-dots">
+                  <span class="mock-dot mock-dot-r"></span>
+                  <span class="mock-dot mock-dot-y"></span>
+                  <span class="mock-dot mock-dot-g"></span>
+                </div>
+                <div class="mock-url">meridian.app</div>
+              </div>
+              <div class="mock-body">
+                <div class="mock-section-label">Your Portfolio</div>
+                <div class="mock-portfolio">
+                  <div class="mock-stat">
+                    <div class="mock-stat-label">Deposited</div>
+                    <div class="mock-stat-val">$2,400</div>
+                  </div>
+                  <div class="mock-stat">
+                    <div class="mock-stat-label">Earned</div>
+                    <div class="mock-stat-val pos">+$312.50</div>
+                  </div>
+                  <div class="mock-stat">
+                    <div class="mock-stat-label">Positions</div>
+                    <div class="mock-stat-val">3</div>
+                  </div>
+                </div>
+
+                <div class="mock-section-label">Available Vaults</div>
+                <div class="mock-vaults">
+                  <div class="mock-vault">
+                    <div>
+                      <div class="mock-vault-name">Blend · USDC</div>
+                      <div class="mock-vault-proto">Lending Protocol</div>
+                    </div>
+                    <div class="mock-vault-apy">15.8%</div>
+                  </div>
+                  <div class="mock-vault">
+                    <div>
+                      <div class="mock-vault-name">DeFindex · USDC</div>
+                      <div class="mock-vault-proto">Yield Strategy</div>
+                    </div>
+                    <div class="mock-vault-apy">13.2%</div>
+                  </div>
+                  <div class="mock-vault">
+                    <div>
+                      <div class="mock-vault-name">Blend · EURC</div>
+                      <div class="mock-vault-proto">Lending Protocol</div>
+                    </div>
+                    <div class="mock-vault-apy">8.9%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Problem ── -->
+    <section class="problem alt-section">
+      <div class="wrap">
+        <div class="problem-header">
+          <h2 class="section-title">
+            Your dollars are doing<br />
+            <span class="grad">absolutely nothing</span>
+          </h2>
+          <p class="section-sub">
+            Inflation erodes the cash you hold, and most stablecoins earn
+            nothing at all. Chasing the best USDC yield yourself would mean
+            watching the market like a full-time job.
+          </p>
+        </div>
+        <div class="stats">
+          <div class="stat stat-red">
+            <div class="stat-icon stat-icon-red">
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 6l12 12m0 0V9m0 9h-9"
+                />
+              </svg>
+            </div>
+            <div
+              class="stat-num num-red"
+              data-counter="4.0"
+              data-decimals="1"
+              data-suffix="%"
+            >
+              4.0%
+            </div>
+            <div class="stat-name">Emerging-market inflation</div>
+            <p class="stat-body">
+              Money left outside a yield-bearing account loses this much
+              purchasing power every year.
+            </p>
+          </div>
+          <div class="stat stat-amber">
+            <div class="stat-icon stat-icon-amber">
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                />
+              </svg>
+            </div>
+            <div
+              class="stat-num num-amber"
+              data-counter="98.5"
+              data-decimals="1"
+              data-suffix="%"
+            >
+              98.5%
+            </div>
+            <div class="stat-name">Stablecoins earning 0% yield</div>
+            <p class="stat-body">
+              Of the more than $300 billion in stablecoins in circulation, only
+              about $4.6 billion is deployed in yield-bearing form.
+            </p>
+          </div>
+          <div class="stat stat-blue">
+            <div class="stat-icon stat-icon-blue">
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                />
+              </svg>
+            </div>
+            <div
+              class="stat-num num-blue"
+              data-fade-from="4.5"
+              data-fade-to="2"
+              data-suffix="%"
+            >
+              <span class="fade-prefix">4.5%</span>
+              <span class="fade-arrow">&rarr;</span>
+              <span class="flip-num">2%</span>
+            </div>
+            <div class="stat-name">is how fast a "good" rate can fade</div>
+            <p class="stat-body">
+              Anyone not tracking rates in real time has no way to know their
+              vault has gone cold, or where the better rate moved to.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── How it works ── -->
+    <section class="light-section">
+      <div class="wrap">
+        <h2 class="section-title">
+          Fight <span class="grad">"yieldflation"</span> in three steps
+        </h2>
+        <div class="steps">
+          <div class="flow-marker" id="flow-marker"></div>
+          <div class="step">
+            <div class="step-num">01</div>
+            <div class="step-line"></div>
+            <h3>Connect your wallet</h3>
+            <p>
+              Connect any supported Stellar wallet in one click, so Meridian can
+              show what your USDC could be earning.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-num">02</div>
+            <div class="step-line"></div>
+            <h3>Deposit and confirm</h3>
+            <p>
+              Approve a single transaction in your wallet to transfer your USDC
+              into the vault.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-num">03</div>
+            <h3>Go to bed</h3>
+            <p>
+              Meridian takes care of the rest, automatically moving your USDC to
+              wherever earns the most.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Protocols ── -->
+    <section class="protocols alt-section">
+      <div class="wrap">
+        <div class="proto-head">
+          <h2 class="section-title">
+            <span class="grad">Battle-tested</span> protocols
+          </h2>
+          <p class="section-sub">
+            Meridian doesn't reinvent the wheel. It aggregates the best yield
+            from the most credible protocols on Stellar, routing your deposit to
+            whichever one is paying the most right now.
+          </p>
+        </div>
+        <div class="proto-grid">
+          <a
+            class="proto-card proto-card--blend"
+            href="https://blend.capital"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="proto-arrow">↗</span>
+            <div class="proto-logo-bg" aria-hidden="true">
+              <svg width="200" height="200" viewBox="0 0 300 300" fill="none">
+                <path
+                  fill="#24a338"
+                  d="M48.16,127.19A51.41,51.41,0,0,1,35,103.59c-2.92-11.64.2-22,7.78-31.06A57.05,57.05,0,0,1,57.17,60.62l1.37-.85c-1.31-2.71-2.57-5.37-3.88-8A22.54,22.54,0,0,1,52,40.38c.34-5.82,3.12-10.36,7.55-14a29.05,29.05,0,0,1,9.67-5q26.27-8.49,52.55-17A63,63,0,0,1,131.93,1.6a19.49,19.49,0,0,1,22.27,17c.46,3.39,1.07,6.76,1.6,10,2.83,0,5.56-.12,8.27,0a60,60,0,0,1,17.56,3.14c10.12,3.68,16.68,10.71,19.77,21a64.21,64.21,0,0,1,2.83,19c0,1.93-.3,3.86-.46,5.75,2.59,1.26,5.19,2.45,7.73,3.78a46.13,46.13,0,0,1,23,27c2.91,8.54,5.62,17.14,8.36,25.73q11.22,35.17,22.37,70.36a41.35,41.35,0,0,1,.42,22.5c-3,12.22-8.91,22.71-18.7,30.78-6,4.95-13,8.19-20.32,10.63-12.77,4.25-25.6,8.3-38.42,12.41q-23.38,7.5-46.79,14.94a77.28,77.28,0,0,1-17.5,3.64,48.33,48.33,0,0,1-13-1,56.3,56.3,0,0,1-16.12-5.79c-12.53-6.77-20.77-16.93-25-30.65C62,236.65,53.8,211.54,45.7,186.4a177.41,177.41,0,0,1-5.61-19.6c-2.79-14.05-.39-27.05,7.67-39Zm27-5.8c-.84,1.15-1.55,2.23-2.38,3.22-2.81,3.32-5.79,6.52-8.47,9.94-7.94,10.1-10.38,21.29-6.31,33.67,2.86,8.7,5.76,17.39,8.55,26.11,7,21.9,13.95,43.82,21,65.7a24.57,24.57,0,0,0,3.16,6.59A35,35,0,0,0,101,276c10.38,6.44,21.44,7.42,33,3.8,11.17-3.5,22.29-7.14,33.44-10.71q26.1-8.36,52.21-16.69c4.85-1.56,9.64-3.3,13.89-6.22,8-5.46,12.52-13.19,15-22.34,1.31-4.88,1.68-9.67.1-14.62q-15.25-47.64-30.38-95.34a27.58,27.58,0,0,0-8.1-12.58c-5.61-5-12.25-7.89-19.45-9.66-3.46-.85-6.93-1.64-10.4-2.44-1-.23-1.89-.88-1.82-1.81.09-1.28-.26-2.88,1.27-3.71,5.46-3,7.59-7.77,7.06-13.68a95.31,95.31,0,0,0-2.19-12.27c-1.19-5.33-4.67-8.57-9.85-10.08a48.47,48.47,0,0,0-20.78-1.19c-1.46.22-2.92.48-4.37.8s-1.89,1-1.43,2.43l.48,1.45c.84,2.57.84,2.56,3.59,2.26a8.81,8.81,0,0,1,5.17.58c1.15.58,1.39,1.59.46,2.43a13.67,13.67,0,0,1-3.22,2.39c-8.87,4.06-17.69,8.27-26.72,12A192.14,192.14,0,0,1,87.72,82c-4.2.73-8.41,1.34-12.64,1.88a7.47,7.47,0,0,1-3-.51c-1-.3-1.33-1.09-.59-1.9a22.07,22.07,0,0,1,3-2.79c1-.76,2.25-1.27,3.33-2,.3-.2.64-.79.55-1-.62-1.73-1.34-3.42-2.06-5.18-.37.12-.63.2-.88.3a67.92,67.92,0,0,0-12,6.41,38,38,0,0,0-8.78,8C51.54,89.43,50,94.1,51.6,99.31a37.31,37.31,0,0,0,8.22,15,12.13,12.13,0,0,0,9.87,4.24A4.62,4.62,0,0,1,74,120.31,13.27,13.27,0,0,0,75.15,121.39ZM134.62,18.84c-.72.17-1.45.3-2.14.52L72.07,38.91a7.53,7.53,0,0,0-1.64.73c-1.35.84-1.51,1.48-.82,2.87Q73.8,51,78,59.43q3.39,6.84,6.78,13.68a3,3,0,0,0,3.5,1.81c2.35-.47,4.69-1,7-1.64,14.38-3.86,28.46-8.68,42.47-13.68,1.59-.57,3.58-.88,3.73-3.21,0-.07.12-.14.19-.2.86-.68.79-1.53.62-2.51-1-5.82-1.95-11.66-2.93-17.48-.86-5.15-1.71-10.3-2.6-15.44C136.49,19.28,136.06,19,134.62,18.84Z"
+                />
+                <path
+                  fill="#24a338"
+                  d="M210.69,133c.93,2.85,1.79,5.43,2.62,8,4.49,14,9,28,13.42,42,2,6.34,4,12.71,5.6,19.16a35.69,35.69,0,0,1,.34,18.27c-2.27,8.41-7.66,14.19-15.34,18-8.07,4-16.61,6.77-25.16,9.49q-23.67,7.51-47.35,15a77.75,77.75,0,0,1-20.61,3.45c-7.84.26-14.41-2.84-19.74-8.59a42.74,42.74,0,0,1-8.56-15c-3-8.48-5.92-17-8.79-25.57C83.33,206,79.7,194.64,75.8,183.37a11.21,11.21,0,0,1,.7-9c2-4.18,5.21-7.28,8.82-10,1.4-1.06,2.87-2,4.3-3,3.1-2.22,4.83-7.65,3.6-11.23a6.24,6.24,0,0,0-3.51-3.54,11.14,11.14,0,0,1-6.57-10.87A11.46,11.46,0,1,1,104.53,142a5.78,5.78,0,0,0,.33,6.88c1.75,2.4,4.18,3.66,7.11,3.09,3.08-.6,6.07-1.64,9.11-2.41a53.34,53.34,0,0,1,19.17-1.05c6.06.69,12.08,1.74,18.14,2.46,14.19,1.69,27.47-.84,39.46-8.92,3.8-2.57,7.52-5.25,11.28-7.88C209.58,133.85,210,133.52,210.69,133Zm-63.61,86.39a30.93,30.93,0,0,0-5.74-16.75,17.63,17.63,0,0,0-7.64-6.47,8.12,8.12,0,0,0-10.24,3.12,14.93,14.93,0,0,0-2.43,7,30.21,30.21,0,0,0,5.82,21.19,17.13,17.13,0,0,0,6.78,5.82c4.59,2.09,8.91.67,11.36-3.75C146.57,226.73,147.07,223.6,147.08,219.43Zm50.34-15.8a31.12,31.12,0,0,0-5.69-17,17.86,17.86,0,0,0-7.24-6.32c-4.49-2-8.84-.55-11.23,3.78a18.39,18.39,0,0,0-2.11,9.37,30.82,30.82,0,0,0,4,14.73c2.1,3.78,4.75,7.08,8.78,9a8.28,8.28,0,0,0,11.45-3.76C196.88,210.62,197.4,207.55,197.42,203.63Z"
+                />
+                <path
+                  fill="#24a338"
+                  d="M189.8,132.28a11.49,11.49,0,0,1-23-.05,11.61,11.61,0,0,1,11.53-11.48A11.47,11.47,0,0,1,189.8,132.28Z"
+                />
+                <path
+                  fill="#24a338"
+                  d="M150.25,118.52a6.84,6.84,0,1,1,.05,13.67,6.84,6.84,0,0,1-.05-13.67Z"
+                />
+                <path
+                  fill="#f0f1f1"
+                  d="M147.08,219.43c0,4.17-.51,7.3-2.09,10.17-2.45,4.42-6.77,5.84-11.36,3.75a17.13,17.13,0,0,1-6.78-5.82A30.21,30.21,0,0,1,121,206.34a14.93,14.93,0,0,1,2.43-7,8.12,8.12,0,0,1,10.24-3.12,17.63,17.63,0,0,1,7.64,6.47A30.93,30.93,0,0,1,147.08,219.43Z"
+                />
+                <path
+                  fill="#f0f1f1"
+                  d="M197.42,203.63c0,3.92-.54,7-2.07,9.83a8.28,8.28,0,0,1-11.45,3.76c-4-1.92-6.68-5.22-8.78-9a30.82,30.82,0,0,1-4-14.73,18.39,18.39,0,0,1,2.11-9.37c2.39-4.33,6.74-5.8,11.23-3.78a17.86,17.86,0,0,1,7.24,6.32A31.12,31.12,0,0,1,197.42,203.63Z"
+                />
+              </svg>
+            </div>
+            <h3 class="proto-name">Blend Capital</h3>
+            <p class="proto-desc">
+              The leading decentralized lending and borrowing protocol on
+              Stellar. Open-source, audited, and actively maintained. Deep USDC
+              liquidity with a proven track record in production.
+            </p>
+          </a>
+          <a
+            class="proto-card proto-card--defi"
+            href="https://defindex.io"
+            target="_blank"
+            rel="noopener"
+          >
+            <span class="proto-arrow">↗</span>
+            <div class="proto-logo-bg" aria-hidden="true">
+              <svg width="200" height="210" viewBox="0 0 40 42" fill="none">
+                <path
+                  fill="#DEC9F4"
+                  d="M36.4588 17.5903H25.1996C18.0292 17.5903 11.1486 14.7412 6.07964 9.66847L4.83625 8.42508C4.62266 8.21149 4.2527 8.36405 4.2527 8.66536V12.9982C4.2527 13.185 4.10013 13.3376 3.91324 13.3376H0.339453C0.152563 13.3376 0 13.185 0 12.9982V0.926596C0 0.739706 0.152563 0.587143 0.339453 0.587143H12.411C12.5979 0.587143 12.7505 0.739706 12.7505 0.926596V4.49657C12.7505 4.68346 12.5979 4.83603 12.411 4.83603H8.07822C7.77309 4.83603 7.62434 5.20218 7.83793 5.41958C12.9107 10.4923 19.7874 13.3414 26.9579 13.3414H34.0559C34.3153 13.3414 34.4869 13.0592 34.3534 12.8342C31.5424 8.05511 26.3438 4.83984 20.4129 4.83984H17.3464C17.1595 4.83984 17.007 4.68728 17.007 4.50039V0.926596C17.007 0.739706 17.1595 0.587143 17.3464 0.587143H20.4129C28.9641 0.587143 36.2986 5.86964 39.3346 13.3414C39.3384 13.3567 39.346 13.3681 39.3498 13.3834C40.1622 15.401 38.6328 17.5941 36.4588 17.5941V17.5903Z"
+                />
+                <path
+                  fill="#DEC9F4"
+                  d="M36.4588 24.4097H25.1996C18.0292 24.4097 11.1486 27.2588 6.07964 32.3316L4.83625 33.5749C4.62266 33.7885 4.2527 33.636 4.2527 33.3347V29.0019C4.2527 28.815 4.10013 28.6624 3.91324 28.6624H0.339453C0.152563 28.6624 0 28.815 0 29.0019V41.0734C0 41.2603 0.152563 41.4129 0.339453 41.4129H12.411C12.5979 41.4129 12.7505 41.2603 12.7505 41.0734V37.5034C12.7505 37.3166 12.5979 37.164 12.411 37.164H8.07822C7.77309 37.164 7.62434 36.7978 7.83793 36.5804C12.9107 31.5077 19.7874 28.6586 26.9579 28.6586H34.0559C34.3153 28.6586 34.4869 28.9408 34.3534 29.1659C31.5424 33.9449 26.3438 37.1602 20.4129 37.1602H17.3464C17.1595 37.1602 17.007 37.3127 17.007 37.4996V41.0696C17.007 41.2565 17.1595 41.4091 17.3464 41.4091H20.4129C28.9641 41.4091 36.2986 36.1266 39.3346 28.6548C39.3384 28.6395 39.346 28.6281 39.3498 28.6128C40.1622 26.5952 38.6328 24.4021 36.4588 24.4021V24.4097Z"
+                />
+              </svg>
+            </div>
+            <h3 class="proto-name">DeFindex</h3>
+            <p class="proto-desc">
+              Automated yield vaults built on Stellar smart contracts.
+              Composable, capital-efficient strategies designed to optimize
+              return over time, without manual intervention.
+            </p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Built in public / Footer ── -->
+    <footer>
+      <div class="wrap">
+        <div class="public-grid">
+          <div class="public-copy">
+            <h2 class="section-title">
+              Built in public,<br />for
+              <span class="grad">the community</span>
+            </h2>
+            <p class="section-sub">
+              Meridian is fully open-source. Read the source, open an issue (or
+              PR), and join the discussion.
+            </p>
+          </div>
+          <div class="public-links">
+            <a
+              class="pub-link"
+              href="https://github.com/drydocs/meridian"
+              target="_blank"
+              rel="noopener"
+            >
+              <div class="pub-icon">
+                <svg
+                  width="21"
+                  height="21"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div class="pub-text">
+                <div class="pub-title">drydocs/meridian</div>
+                <div class="pub-sub">View the source on GitHub</div>
+              </div>
+              <span class="pub-chevron">→</span>
+            </a>
+            <a
+              class="pub-link"
+              href="https://github.com/drydocs/meridian/issues"
+              target="_blank"
+              rel="noopener"
+            >
+              <div class="pub-icon">
+                <svg
+                  width="21"
+                  height="21"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <div class="pub-text">
+                <div class="pub-title">Open Issues</div>
+                <div class="pub-sub">Pick one up and contribute</div>
+              </div>
+              <span class="pub-chevron">→</span>
+            </a>
+            <a
+              class="pub-link"
+              href="https://github.com/drydocs/meridian/discussions"
+              target="_blank"
+              rel="noopener"
+            >
+              <div class="pub-icon">
+                <svg
+                  width="21"
+                  height="21"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+                  />
+                </svg>
+              </div>
+              <div class="pub-text">
+                <div class="pub-title">Discussions</div>
+                <div class="pub-sub">Roadmap, ideas, and feedback</div>
+              </div>
+              <span class="pub-chevron">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="wrap">
+        <div class="foot-row">
+          <div class="foot-left">
+            <span class="foot-wordmark">Meridian</span>
+            <a
+              href="https://github.com/drydocs/meridian/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener"
+              >MIT License</a
+            >
+            <span>&copy; 2026</span>
+          </div>
+          <div class="foot-right">
+            <a href="/docs/">Docs</a>
+            <a
+              href="https://github.com/drydocs/meridian"
+              target="_blank"
+              rel="noopener"
+              >GitHub</a
+            >
+            <a
+              href="https://github.com/drydocs/meridian/issues"
+              target="_blank"
+              rel="noopener"
+              >Issues</a
+            >
+            <a href="https://stellar.org" target="_blank" rel="noopener"
+              >Built on Stellar</a
+            >
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      /* Scroll-triggered number counters (inflation and remittance-fee stats only) */
+      function animateCounter(el) {
+        const target = parseFloat(el.dataset.counter);
+        const suffix = el.dataset.suffix || "";
+        const duration = 1800;
+        const start = performance.now();
+        const decimals =
+          el.dataset.decimals !== undefined
+            ? Number(el.dataset.decimals)
+            : target % 1 !== 0
+              ? 1
+              : 0;
+
+        function tick(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+          el.textContent = (target * ease).toFixed(decimals) + suffix;
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      function animateFade(el) {
+        const from = parseFloat(el.dataset.fadeFrom);
+        const to = Math.round(parseFloat(el.dataset.fadeTo));
+        const suffix = el.dataset.suffix || "";
+        const fromDecimals = from % 1 !== 0 ? 1 : 0;
+        const prefixEl = el.querySelector(".fade-prefix");
+        const arrowEl = el.querySelector(".fade-arrow");
+        const flipEl = el.querySelector(".flip-num");
+        const riseDuration = 1100;
+        const pauseDuration = 500;
+        const stepDuration = 850;
+        const flipDuration = 650;
+        const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+
+        arrowEl.style.opacity = "0";
+        flipEl.style.opacity = "0";
+
+        const riseStart = performance.now();
+        function rise(now) {
+          const progress = Math.min((now - riseStart) / riseDuration, 1);
+          const value = from * easeOut(progress);
+          prefixEl.textContent =
+            (progress < 1 ? value.toFixed(1) : from.toFixed(fromDecimals)) +
+            suffix;
+          if (progress < 1) {
+            requestAnimationFrame(rise);
+          } else {
+            arrowEl.style.transition = "opacity 0.3s";
+            arrowEl.style.opacity = "1";
+            setTimeout(stepDown, pauseDuration);
+          }
+        }
+
+        function flipTo(text) {
+          flipEl.classList.remove("flipping");
+          void flipEl.offsetWidth;
+          flipEl.classList.add("flipping");
+          flipEl.style.opacity = "1";
+          setTimeout(() => {
+            flipEl.textContent = text;
+          }, flipDuration / 2);
+        }
+
+        function stepDown() {
+          let current = Math.floor(from);
+          flipEl.textContent = current + suffix;
+          flipEl.style.transition = "opacity 0.3s";
+          flipEl.style.opacity = "1";
+
+          function next() {
+            if (current > to) {
+              current -= 1;
+              setTimeout(() => {
+                flipTo(current + suffix);
+                next();
+              }, stepDuration);
+            }
+          }
+
+          next();
+        }
+
+        requestAnimationFrame(rise);
+      }
+
+      const counters = document.querySelectorAll("[data-counter]");
+      const fades = document.querySelectorAll("[data-fade-from]");
+      const seen = new Set();
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && !seen.has(entry.target)) {
+              seen.add(entry.target);
+              if (entry.target.dataset.fadeFrom !== undefined) {
+                animateFade(entry.target);
+              } else {
+                animateCounter(entry.target);
+              }
+            }
+          });
+        },
+        { threshold: 0.3 }
+      );
+
+      counters.forEach((el) => observer.observe(el));
+      fades.forEach((el) => observer.observe(el));
+
+      /* Single marker travelling continuously from step 1 to the last
+         step. It passes visually behind any circle in between (z-index),
+         and near the final circle it keeps advancing slightly while
+         shrinking away, like it's being pulled through a door. */
+      function initStepFlow() {
+        const stepsEl = document.querySelector(".steps");
+        const marker = document.getElementById("flow-marker");
+        if (!stepsEl || !marker) return;
+
+        const circles = Array.from(stepsEl.querySelectorAll(".step-num"));
+        if (circles.length < 2) return;
+
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+        if (reduceMotion) return;
+
+        const markerWidth = 24;
+        const doorDepth = 38;
+
+        let pathStart = 0;
+        let pathEnd = 0;
+        function measure() {
+          const base = stepsEl.getBoundingClientRect();
+          const first = circles[0].getBoundingClientRect();
+          const last = circles[circles.length - 1].getBoundingClientRect();
+          pathStart = first.right - base.left;
+          pathEnd = last.left - base.left;
+        }
+        measure();
+        window.addEventListener("resize", measure, { passive: true });
+
+        const growMs = 220;
+        const travelMs = 2600;
+        const enterMs = 550;
+        const restMs = 500;
+        const easeInOut = (t) =>
+          t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        const easeIn = (t) => t * t * t;
+
+        function setState(left, width, opacity) {
+          marker.style.left = left + "px";
+          marker.style.width = width + "px";
+          marker.style.opacity = opacity;
+        }
+
+        function tween(duration, onFrame) {
+          return new Promise((resolve) => {
+            const start = performance.now();
+            function tick(now) {
+              const progress = Math.min((now - start) / duration, 1);
+              onFrame(progress);
+              if (progress < 1) requestAnimationFrame(tick);
+              else resolve();
+            }
+            requestAnimationFrame(tick);
+          });
+        }
+
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        async function loop() {
+          while (true) {
+            setState(pathStart, markerWidth, 0);
+
+            await tween(growMs, (p) => {
+              setState(pathStart, markerWidth, p);
+            });
+
+            await tween(travelMs, (p) => {
+              const x = pathStart + (pathEnd - pathStart) * easeInOut(p);
+              setState(x, markerWidth, 1);
+            });
+
+            await tween(enterMs, (p) => {
+              const eased = easeIn(p);
+              const x = pathEnd + doorDepth * eased;
+              const width = markerWidth * (1 - eased);
+              setState(x, width, 1 - eased);
+            });
+
+            await wait(restMs);
+          }
+        }
+
+        loop();
+      }
+
+      initStepFlow();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,155 @@
+export const DEFAULT_ALLOWED_ORIGIN = "https://usemeridian.vercel.app";
+
+export const SUPPORTED_STABLECOINS = ["USDC", "EURC"] as const;
+export type SupportedStablecoin = (typeof SUPPORTED_STABLECOINS)[number];
+
+export const PROTOCOL_IDS = ["blend", "defindex", "meridian"] as const;
+export type ProtocolId = (typeof PROTOCOL_IDS)[number];
+
+// Per-network classic Stellar asset issuers. Used for trustline setup and SAC
+// address derivation. Testnet USDC is issued by Blend's controlled test key
+// (not Circle) because Blend's TestnetV2 pool was deployed with that issuer.
+export const USDC_ISSUER: Record<string, string> = {
+  testnet: "GATALTGTWIOT6BUDBCZM3Q4OQ4BO2COLOAZ7IYSKPLC2PMSOPPGF5V56",
+  mainnet: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+};
+
+// mUSDC's classic-asset issuer, for networks where mUSDC still predates the
+// #578 cutover to a custom SEP-41 token contract (see
+// apps/docs/architecture/vault-contract.md#transferable-shares). An empty
+// string is not "not deployed yet" here so much as it is the *permanent*
+// state for any mUSDC deployed as a SEP-41 contract: that mUSDC has no
+// issuer and no classic trustline at all, ever — every consumer of this
+// constant (buildAddTrustlineTx, hasRequiredTrustlines,
+// allowedTrustlineIssuers, assertFaucetPayment) already treats an empty
+// value as "skip mUSDC entirely", which is exactly correct post-cutover.
+// `mainnet` was already blank for this reason (no SAC mUSDC was ever
+// deployed there); `testnet`'s current value is the OLD, still-live SAC's
+// issuer and should be blanked out as part of the operational cutover to
+// the new contract (deploying via the updated `scripts/deploy-testnet.sh`
+// and updating `CONTRACT_ADDRESSES.testnet.{vault,musdc}` alongside it),
+// not before — this file describes what's actually live, not what the code
+// supports.
+export const MUSDC_ISSUER: Record<string, string> = {
+  testnet: "",
+  mainnet: "",
+};
+
+export const CONTRACT_ADDRESSES = {
+  testnet: {
+    blend: {
+      // Blend TestnetV2: the only active Blend lending pool on Stellar testnet.
+      pool: "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF",
+    },
+    defindex: {
+      // DeFindex factory: defindex-io/stellar-contracts public/testnet.contracts.json
+      factory: "CDSCWE4GLNBYYTES2OCYDFQA2LLY4RBIAX6ZI32VSUXD7GO6HRPO4A32",
+      // Paltalabs single-asset USDC vault on DeFindex testnet.
+      vault: "CBMVK2JK6NTOT2O4HNQAIQFJY232BHKGLIMXDVQVHIIZKDACXDFZDWHN",
+    },
+    // Stellar Asset Contract for Blend's testnet USDC (issuer: GATALTGTWIOT6...).
+    // Distinct from Circle's testnet USDC; Blend's TestnetV2 pool was deployed
+    // with this issuer. Obtain test tokens via testnet.blend.capital faucet.
+    usdc: "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
+    // Stellar Asset Contract for Circle's testnet EURC (issuer: GB3Q6QDZYTHWT7...).
+    eurc: "CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ",
+    musdc: "CCU7RWT246CODH2455WTSGUYKXRL3J4F5C2QXIEVCN7QHCRC4BAWGKV7",
+    // Redeployed for #701: the previous vault
+    // (CBOQTI3C7UHTBRHSF3AJEQYXDINJ354XRWIZKSEV6PFIEUSJF2YWZPME) predated
+    // #704/#705/#711/#710 (TTL management, event emission, migration-keeper
+    // fix, admin slippage cap and timelock), all landed after that vault was
+    // last deployed. Built from a Linux CI job rather than locally, so its
+    // bytecode is guaranteed to match what
+    // .github/workflows/verify-contract-addresses.yml independently
+    // rebuilds and checks (a Windows-built WASM cannot be guaranteed
+    // byte-identical). See apps/docs/operations/testnet-deployment.md's
+    // "Vault migration history" for the old address and its (empty)
+    // pre-cutover balance.
+    vault: "CAIQBVLBIUWQGE6DQUHDMZ2QWI7QP6KTCN7GP2BIZ6JZC4ES47JO4SSM",
+  },
+  mainnet: {
+    blend: {
+      // Blend mainnet USDC pool (Fixed V2), the pool meridian's mainnet vault
+      // is wired to. Other ranked pools still resolve via DeFiLlama pool
+      // UUIDs in KNOWN_POOLS (packages/stellar-sdk-helpers/src/known-pools.ts)
+      // rather than a hardcoded address here.
+      pool: "CAJJZSGMMM3PD7N33TAPHGBUGTB43OC73HVIK2L2G6BNGGGYOSSYBXBD",
+    },
+    defindex: {
+      factory: "",
+      vault: "",
+    },
+    // Stellar Asset Contract for Circle's mainnet USDC (issuer: GA5ZSEJYB37J...).
+    usdc: "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+    // Stellar Asset Contract for Circle's mainnet EURC (issuer: GDHU6WRG4IEQ...).
+    eurc: "CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV",
+    musdc: "CAEJJPN73VOEWUVCXCXMIXOHMFLUXAYVFMCTCJHQFI5R2NIB2S5YTOFL",
+    // The blend-adapter wired to this vault is
+    // CBNKERYAG7VZNBH2V3TF5JBXLD3MXLVQW5GG4AO445EUDCPKP4D2DDP2, discoverable
+    // at runtime via vault.get_adapter() rather than tracked separately here.
+    // Redeployed from the original CCJZCEF...-address deploy: that one was
+    // built locally on Windows and did not reproduce on a genuine Linux
+    // rebuild, so it could never be verified against source (see the
+    // "Mainnet deployment record" in apps/docs/operations/mainnet-deployment.md).
+    vault: "CBRAD5MD7CCXNXRLRGTRKG4NNZKR3N643VUEBNJGWB2L6KLZDLFWMXHQ",
+  },
+} as const;
+
+// Hard ceiling on migrate_adapter's max_slippage_bps, mirrored from
+// packages/contracts/vault/src/storage.rs MAX_ADMIN_SLIPPAGE_BPS.
+// If you change this value, change it in that file too (and vice-versa):
+// the two are in different languages and build systems so they can't be
+// kept in sync automatically.
+export const MAX_ADMIN_SLIPPAGE_BPS = 500;
+
+/** Centralized slippage (bps). Single source of truth for issue #822. */
+export const SLIPPAGE_BPS = {
+  /** Frontend vault deposit/withdraw default (50 bps = 0.5%). */
+  FRONTEND_VAULT: 50,
+  /** DeFindex SDK / adapter floor. */
+  DEFINDEX: 10,
+  /** Migration keeper default. */
+  MIGRATION_DEFAULT: 100,
+  /** Migration keeper + vault admin ceiling (alias of MAX_ADMIN_SLIPPAGE_BPS). */
+  MIGRATION_MAX: MAX_ADMIN_SLIPPAGE_BPS,
+} as const;
+
+export const DEFAULT_SLIPPAGE_BPS = SLIPPAGE_BPS.FRONTEND_VAULT;
+export const DEFINDEX_SLIPPAGE_BPS = SLIPPAGE_BPS.DEFINDEX;
+export const MIGRATION_DEFAULT_SLIPPAGE_BPS = SLIPPAGE_BPS.MIGRATION_DEFAULT;
+export const MIGRATION_MAX_SLIPPAGE_BPS = MAX_ADMIN_SLIPPAGE_BPS;
+
+export const STELLAR_NETWORKS = {
+  testnet: {
+    network: "testnet" as const,
+    rpcUrl: "https://soroban-testnet.stellar.org",
+    passphrase: "Test SDF Network ; September 2015",
+  },
+  mainnet: {
+    network: "mainnet" as const,
+    // Unlike testnet, the Stellar Development Foundation does not run a
+    // public mainnet RPC. This is a third-party public endpoint (see
+    // https://sorobanrpc.com for others); revisit before relying on it for
+    // anything beyond occasional CLI use, e.g. own infra or a paid provider.
+    rpcUrl: "https://mainnet.sorobanrpc.com",
+    passphrase: "Public Global Stellar Network ; September 2015",
+  },
+};
+
+// Mainnet is the default: the product is live there, and a missing or
+// misconfigured STELLAR_NETWORK should fail toward the real deployment, not
+// silently toward testnet. This is also why the frontend's testnet-default
+// bug (an unrelated build-config issue, see apps/web/vite.config.ts) went
+// unnoticed for as long as it did, a wrong default made a broken value look
+// like a plausible one instead of an obviously wrong one. Testnet requires
+// explicitly setting STELLAR_NETWORK=testnet.
+const _networkKey = (
+  process.env.STELLAR_NETWORK === "testnet" ? "testnet" : "mainnet"
+) satisfies keyof typeof STELLAR_NETWORKS;
+
+export const APP_NETWORK = STELLAR_NETWORKS[_networkKey];
+export const APP_ADDRESSES = CONTRACT_ADDRESSES[_networkKey];
+
+export function isDefindexConfigured(): boolean {
+  return Boolean(process.env.DEFINDEX_VAULT_ID ?? APP_ADDRESSES.defindex.vault);
+}

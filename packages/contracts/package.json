@@ -1,0 +1,8 @@
+{
+  "name": "@meridian/contracts",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "stellar contract build",
+    "deploy:testnet": "bash ../../scripts/deploy-testnet.sh"
+  }
+}

@@ -1,0 +1,126 @@
+import { useCallback, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { VaultPanel } from "./components/dashboard/VaultPanel";
+import { WalletConnect } from "./components/onboarding/WalletConnect";
+import { Toasts } from "./components/ui/Toasts";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
+import { useWalletStore } from "./store/wallet";
+import { useTranslation } from "react-i18next";
+import { AdminLogin } from "./pages/AdminLogin";
+import { StatusPage } from "./pages/StatusPage";
+
+const queryClient = new QueryClient();
+
+// No router dependency for a few extra routes: the app has a handful of
+// pages, and pulling in react-router for a couple of static path splits
+// would be a heavier change than the admin dashboard itself (#615) needs.
+//
+// The public dashboard and status page stay under /app/*, which the existing
+// Vercel rewrite serves from /app/index.html. Admin is canonical at /admin;
+// the legacy /app/admin path is also recognized if Vercel's redirect is not
+// applied before the SPA loads.
+function isAdminRoute(): boolean {
+  const pathname = window.location.pathname;
+  return (
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    pathname === "/app/admin" ||
+    pathname.startsWith("/app/admin/")
+  );
+}
+
+function isStatusRoute(): boolean {
+  return window.location.pathname.startsWith("/app/status");
+}
+
+function Dashboard() {
+  const { t, i18n } = useTranslation();
+  const toggleLanguage = useCallback(() => {
+    const newLang = i18n.language === "en" ? "fr" : "en";
+    i18n.changeLanguage(newLang);
+    localStorage.setItem("language", newLang);
+  }, [i18n]);
+
+  return (
+    <div className="relative min-h-screen bg-night text-white overflow-hidden">
+      <svg
+        aria-hidden="true"
+        viewBox="4 4 32 17"
+        fill="none"
+        className="pointer-events-none fixed left-[6vw] top-1/2 z-0 h-[170vh] w-auto max-w-none -translate-y-1/2 opacity-[0.055]"
+      >
+        <defs>
+          <linearGradient
+            id="app-bg-convergence"
+            x1="34"
+            y1="20"
+            x2="17"
+            y2="17"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M34 20 A14 14 0 0 0 6 20 A11 11 0 0 1 28 20 A8 8 0 0 0 12 20 A5 5 0 0 1 22 20"
+          stroke="url(#app-bg-convergence)"
+          strokeWidth="2.25"
+          strokeLinecap="butt"
+        />
+        <circle cx="17" cy="17.3" r="2.6" fill="url(#app-bg-convergence)" />
+      </svg>
+
+      <header className="sticky top-0 z-50 border-b border-gray-800 bg-night/95 backdrop-blur-sm pb-4">
+        <div className="max-w-xl mx-auto px-6 h-20 flex items-end justify-between pb-4">
+          <span className="font-extrabold text-lg tracking-tight text-white">
+            {t("header.title")}
+          </span>
+          <div className="flex items-center gap-2">
+            <WalletConnect />
+            <button
+              onClick={toggleLanguage}
+              className="text-sm border-gray-700 rounded-lg px-3 py-1.5 text-gray-300 hover:border-gray-600 hover:text-white transition-colors duration-150"
+            >
+              {i18n.language === "en" ? "FR" : "EN"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-10 max-w-xl mx-auto px-6 py-10">
+        <ErrorBoundary>
+          <VaultPanel />
+        </ErrorBoundary>
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  useEffect(() => {
+    const revalidate = () => void useWalletStore.getState().revalidate();
+    revalidate();
+    // Re-check authorization when the window regains focus. Freighter opens
+    // as an extension popup (separate window), so the page loses focus while
+    // the popup is open and regains it when it closes — this catches revoked
+    // site access without requiring a page reload.
+    window.addEventListener("focus", revalidate);
+    return () => window.removeEventListener("focus", revalidate);
+  }, []);
+
+  const page = isAdminRoute() ? (
+    <AdminLogin />
+  ) : isStatusRoute() ? (
+    <StatusPage />
+  ) : (
+    <Dashboard />
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {page}
+      <Toasts />
+    </QueryClientProvider>
+  );
+}

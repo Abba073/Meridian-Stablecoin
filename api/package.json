@@ -1,0 +1,21 @@
+{
+  "name": "@meridian/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@meridian/api-core": "workspace:*",
+    "@meridian/shared": "workspace:*",
+    "@meridian/stellar-sdk-helpers": "workspace:*",
+    "@stellar/stellar-sdk": "^14.6.1",
+    "@upstash/ratelimit": "^2.1.0",
+    "@upstash/redis": "^1.38.4"
+  },
+  "devDependencies": {
+    "@vercel/node": "^13.0.1",
+    "vitest": "^5.0.0"
+  }
+}
